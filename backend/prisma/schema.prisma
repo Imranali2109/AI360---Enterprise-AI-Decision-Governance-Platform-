@@ -1,0 +1,211 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user") // admin, user, viewer
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model UseCase {
+  id         String @id @default(uuid())
+  name       String
+  department String
+  problem    String @db.Text
+  solution   String @db.Text
+  stage      String @default("Idea") // Idea, Assessment, PoC, Pilot, Production, Rejected
+
+  // Usage & Scale
+  numUsers Int @default(0)
+
+  // Business scoring inputs (1-10 scale)
+  businessImpact      Int @default(5)
+  technicalComplexity Int @default(5) // higher = harder = lower feasibility
+  dataAvailability    Int @default(5)
+  adoptionPotential   Int @default(5)
+  implementationEffort Int @default(5) // higher = harder
+
+  // Financial
+  implementationCost Float @default(0) // INR one-time
+  operatingCost      Float @default(0) // INR per year
+  annualSavings      Float @default(0) // INR per year
+
+  // Manual work baseline
+  manualHoursPerMonth Float @default(0)
+  timeSavingsPercent  Float @default(0) // 0-100
+
+  // Data sensitivity
+  dataSensitivity String @default("Internal") // Public, Internal, Confidential, Personal, Sensitive
+
+  // Human oversight
+  humanOversightRequired Boolean @default(false)
+
+  // Calculated scores
+  priorityScore  Float  @default(0) // 0-100
+  roiScore       Float  @default(0)
+  priority       String @default("Low") // High, Medium, Low
+  recommendation String @default("Assess")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  riskAssessments  RiskAssessment[]
+  roiCalculations  ROICalculation[]
+  costCalculations CostCalculation[]
+
+  @@map("use_cases")
+}
+
+model LLMEvaluation {
+  id               String   @id @default(uuid())
+  sessionId        String // groups a comparison run
+  model            String // e.g. gpt-4o, gemini-1.5-pro
+  prompt           String   @db.Text
+  response         String   @db.Text
+  qualityScore     Float    @default(0) // 0-100
+  latencyMs        Int      @default(0) // milliseconds
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  estimatedCostInr Float    @default(0)
+  reliabilityScore Float    @default(0) // 0-100
+  overallScore     Float    @default(0) // weighted composite
+  isDemoMode       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@map("llm_evaluations")
+}
+
+model RiskAssessment {
+  id        String  @id @default(uuid())
+  useCaseId String
+  useCase   UseCase @relation(fields: [useCaseId], references: [id], onDelete: Cascade)
+
+  // Privacy risk
+  privacyScore    Float  @default(0)
+  dataSensitivity String @default("Internal")
+
+  // Security risks (0-10 each)
+  dataLeakageRisk        Int @default(0)
+  promptInjectionRisk    Int @default(0)
+  unauthorizedAccessRisk Int @default(0)
+  excessivePermissionsRisk Int @default(0)
+  securityScore          Float @default(0)
+
+  // Model risks (0-10 each)
+  hallucinationRisk  Int @default(0)
+  biasRisk           Int @default(0)
+  reliabilityRisk    Int @default(0)
+  explainabilityRisk Int @default(0)
+  modelScore         Float @default(0)
+
+  // Business risks (0-10 each)
+  financialImpactRisk  Int @default(0)
+  customerImpactRisk   Int @default(0)
+  regulatoryImpactRisk Int @default(0)
+  humanOversightRequired Boolean @default(false)
+  businessScore          Float @default(0)
+
+  // Computed
+  totalRiskScore  Float    @default(0) // 0-100
+  riskLevel       String   @default("Low") // Low, Medium, High
+  recommendations String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("risk_assessments")
+}
+
+model Document {
+  id           String @id @default(uuid())
+  name         String
+  originalName String
+  filePath     String
+  fileSize     Int    @default(0)
+  mimeType     String @default("application/pdf")
+  status       String @default("Processing") // Processing, Ready, Error
+  chunkCount   Int    @default(0)
+  pageCount    Int    @default(0)
+  createdAt    DateTime @default(now())
+
+  chunks DocumentChunk[]
+
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  pageNumber Int      @default(1)
+  chunkIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@map("document_chunks")
+}
+
+model ROICalculation {
+  id        String   @id @default(uuid())
+  useCaseId String?
+  useCase   UseCase? @relation(fields: [useCaseId], references: [id], onDelete: SetNull)
+
+  // Inputs
+  numUsers              Int   @default(0)
+  manualHoursPerMonth   Float @default(0)
+  hourlyEmployeeCostInr Float @default(0)
+  automationPercent     Float @default(0) // 0-100
+  implementationCost    Float @default(0)
+  annualOperatingCost   Float @default(0)
+
+  // Outputs
+  annualBenefit      Float @default(0)
+  totalAnnualAiCost  Float @default(0)
+  netAnnualBenefit   Float @default(0)
+  roiPercent         Float @default(0)
+  paybackMonths      Float @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@map("roi_calculations")
+}
+
+model CostCalculation {
+  id        String   @id @default(uuid())
+  useCaseId String?
+  useCase   UseCase? @relation(fields: [useCaseId], references: [id], onDelete: SetNull)
+
+  // Inputs
+  numUsers            Int    @default(0)
+  requestsPerDay      Int    @default(0)
+  avgInputTokens      Int    @default(0)
+  avgOutputTokens     Int    @default(0)
+  model               String @default("")
+  workingDaysPerMonth Int    @default(22)
+
+  // Outputs
+  monthlyRequests     Int   @default(0)
+  monthlyInputTokens  Int   @default(0)
+  monthlyOutputTokens Int   @default(0)
+  monthlyCostInr      Float @default(0)
+  annualCostInr       Float @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@map("cost_calculations")
+}
