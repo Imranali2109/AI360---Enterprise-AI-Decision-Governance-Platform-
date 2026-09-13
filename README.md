@@ -11,7 +11,7 @@
 
 AI360 is a full-stack enterprise web application that helps organisations evaluate, govern, and track their AI initiatives. It covers the complete lifecycle of enterprise AI decision-making: from identifying use cases to assessing feasibility, comparing LLMs, estimating costs and ROI, managing risk, and generating executive reports.
 
-Built as a portfolio project demonstrating skills in **Enterprise AI evaluation, LLM comparison, RAG implementation, AI governance, and cost/ROI analysis**.
+Built as a project demonstrating skills in **Enterprise AI evaluation, LLM comparison, RAG implementation, AI governance, and cost/ROI analysis**.
 
 ---
 
@@ -311,8 +311,6 @@ cd frontend
 npm run dev
 ```
 
-Open http://localhost:5173
-
 **Demo credentials:**
 - Email: `admin@ai360.demo`
 - Password: `Demo@1234`
@@ -333,20 +331,6 @@ Open http://localhost:5173
 | `ANTHROPIC_API_KEY` | Optional | Enables real Claude calls |
 | `FORCE_DEMO_MODE` | Optional | true = always use mock responses |
 | `UPLOAD_DIR` | Optional | File upload directory |
-
----
-
-## 🎭 Demo Mode
-
-The application runs in **Demo Mode** when no API keys are configured.
-
-In Demo Mode:
-- LLM comparison uses realistic predefined responses per model
-- RAG assistant uses predefined Q&A for common policy questions
-- All business calculations (cost, ROI, scoring, risk) run normally
-- A yellow "Demo Mode" banner is shown in relevant sections
-
-To enable real AI: add your API key(s) to `backend/.env`.
 
 ---
 
@@ -419,16 +403,3 @@ To enable real AI: add your API key(s) to `backend/.env`.
 
 ---
 
-## 📝 Project Story
-
-> "I built AI360, an enterprise AI decision and governance platform. It helps organisations evaluate AI use cases based on business impact, technical feasibility, cost, ROI, and risk using a transparent weighted scoring system. I implemented an LLM comparison module to objectively evaluate AI models on quality, latency, and cost using configurable weights. I also built a RAG-based knowledge assistant using pgvector for semantic search, enabling employees to ask questions about company policies with source citations. Finally, I added a comprehensive AI governance module to assess privacy, security, model, and business risks with automatic control recommendations."
-
----
-
-## 👤 Author
-
-Built as a portfolio project demonstrating Enterprise AI skills for an AI/IT internship application.
-
----
-
-*AI360 — Powering Enterprise AI Decisions* 🚀
